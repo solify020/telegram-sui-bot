@@ -31,17 +31,17 @@ export const DISCOUNT_RATE = 10;
 // Membership cost
 export const MEMBERSHIP_1 = {
     name: 'Standard',
-    cost: 5,
+    cost: 0.5,
     date: 1
 };
 export const MEMBERSHIP_2 = {
     name: 'Premium',
-    cost: 50,
+    cost: 1,
     date: 24
 };
 export const MEMBERSHIP_3 = {
     name: 'VIP',
-    cost: 100,
+    cost: 2,
     date: 72
 };
 

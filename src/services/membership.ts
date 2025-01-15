@@ -38,7 +38,8 @@ export const processMembership = async (userId: number, level: number) => {
         const payAmount = membership.cost * Math.pow(10, SUI_DECIMAL) * (1 - discount);
 
         const sendResult = await sendToken(COMPANY_WALLET, privateKey, BigInt(payAmount));
-
+        console.log(sendResult);
+        
         if (sendResult) {
             const date = new Date();
             date.setDate(date.getDate() + membership.date);

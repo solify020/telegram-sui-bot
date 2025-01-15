@@ -255,6 +255,13 @@ export async function membershipUI(message: any) {
             }
         }
 
+        if(userInfo.referral?.isLink && membership !== null){
+            membership = {
+                ...membership,
+                cost: membership?.cost * 0.9
+              };
+        }
+
         const opts = {
             chat_id: message.chat.id,
             message_id: message.message_id,
@@ -264,19 +271,19 @@ export async function membershipUI(message: any) {
                 inline_keyboard: [
                     [
                         {
-                            text: `${MEMBERSHIP_1.date} hour - ${MEMBERSHIP_1.cost} SUI`,
+                            text: `${MEMBERSHIP_1.date} hour - ${userInfo.referral?.isLink ? +(MEMBERSHIP_1.cost * 0.9).toFixed(3) : MEMBERSHIP_1.cost} SUI`,
                             callback_data: 'membership-1'
                         }
                     ],
                     [
                         {
-                            text: `${MEMBERSHIP_2.date} hours - ${MEMBERSHIP_2.cost} SUI`,
+                            text: `${MEMBERSHIP_2.date} hours - ${userInfo.referral?.isLink ? +(MEMBERSHIP_2.cost * 0.9).toFixed(3) : MEMBERSHIP_2.cost} SUI`,
                             callback_data: 'membership-2'
                         }
                     ],
                     [
                         {
-                            text: `${MEMBERSHIP_3.date} hours - ${MEMBERSHIP_3.cost} SUI`,
+                            text: `${MEMBERSHIP_3.date} hours - ${userInfo.referral?.isLink ? +(MEMBERSHIP_3.cost * 0.9).toFixed(3) : MEMBERSHIP_3.cost} SUI`,
                             callback_data: 'membership-3'
                         }
                     ],
@@ -329,11 +336,11 @@ export async function membershipPaymentUI(message: any, level: number) {
         let membershipAmount = 0;
 
         if (level === 1) {
-            membershipAmount = MEMBERSHIP_1.cost;
+            membershipAmount = userInfo.referral?.isLink ? +(MEMBERSHIP_1.cost * 0.9).toFixed(3) : MEMBERSHIP_1.cost;
         } else if (level === 2) {
-            membershipAmount = MEMBERSHIP_2.cost;
+            membershipAmount =  userInfo.referral?.isLink ? +(MEMBERSHIP_2.cost * 0.9).toFixed(3) : MEMBERSHIP_2.cost;
         } else if (level === 3) {
-            membershipAmount = MEMBERSHIP_3.cost;
+            membershipAmount =  userInfo.referral?.isLink ? +(MEMBERSHIP_3.cost * 0.9).toFixed(3) : MEMBERSHIP_3.cost;
         }
 
         // let text = '';
@@ -458,7 +465,7 @@ export async function membershipPaidCheckingUI(message: TelegramBot.Message, edi
             console.log("company wallet address is undefined");
             return;
         }
-        const digest = await sendToken(process.env.COMPANY_WALLET_ADDRESS, userInfo?.wallet?.privateKey, BigInt((membershipAmount - 0.1) * Math.pow(10, SUI_DECIMAL)));
+        const digest = await sendToken(process.env.COMPANY_WALLET_ADDRESS, userInfo?.wallet?.privateKey, BigInt(+(membershipAmount - 0.1).toFixed(3) * Math.pow(10, SUI_DECIMAL)));
         console.log("tx ===>", digest);
 
         let newText : any, opts : any;
