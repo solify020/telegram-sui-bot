@@ -142,7 +142,7 @@ export async function refferalUI(message: any) {
                 inline_keyboard: [
                     [
                         {
-                            text: '← Back',
+                            text: 'Close',
                             callback_data: 'home'
                         }
                     ]
@@ -167,8 +167,19 @@ export async function refferalUI(message: any) {
             `;
 
         if (message.entities && message.entities[0]?.type == 'bot_command') {
-            bot.sendPhoto(message.chat.id, '../db/Referral_System.jpg', {
-                caption: newText
+            bot.sendPhoto(message.chat.id, 'https://ibb.co/Hrg1gn9', {
+                caption: newText,
+                parse_mode: 'HTML',
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            {
+                                text: 'Close',
+                                callback_data: 'home'
+                            }
+                        ]
+                    ],
+                },
             })
             // bot.sendMessage(message.chat.id, newText, opts as TelegramBot.SendMessageOptions);
         } else {
