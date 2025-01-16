@@ -55,7 +55,7 @@ const total_fee = async() => {
         coinType: suiCoinType
     })
 
-    const fee = balance.totalBalance - 200000000;
+    const fee = balance.totalBalance - 5000000000;
 
     return fee;
 }
