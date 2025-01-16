@@ -24,24 +24,24 @@ export const TOKEN_ADDRESS = '';
 
 // Refferal rate
 export const FEE_RATE_MAX = 20;
-export const FEE_RATES = [10, 3, 1.5, 0.5, 0] as any;
+export const FEE_RATES = [10, 3.5, 1.5, 0.5, 0] as any;
 
 export const DISCOUNT_RATE = 10;
 
 // Membership cost
 export const MEMBERSHIP_1 = {
     name: 'Standard',
-    cost: 0.5,
+    cost: 5,
     date: 1
 };
 export const MEMBERSHIP_2 = {
     name: 'Premium',
-    cost: 1,
+    cost: 50,
     date: 24
 };
 export const MEMBERSHIP_3 = {
     name: 'VIP',
-    cost: 2,
+    cost: 100,
     date: 72
 };
 
