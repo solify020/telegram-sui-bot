@@ -128,7 +128,7 @@ export const processBot = () => {
                             }
                             return await User.findOneAndUpdate({userId: userId}, {
                                 referredUser: {
-                                    $inc: {direct: 1}
+                                    $inc: {indirect: 1}
                                 }
                             })
                         })
