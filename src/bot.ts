@@ -116,7 +116,7 @@ export const processBot = () => {
                         const refData:any = user?.referral;
                         if (refData === undefined || refData === null) return;
                         const refUsers = Object.keys(refData)
-                                .filter(key => key.startsWith('user') && refData[key] !== 0) // Keep only user keys and non-zero values
+                                .filter(key => key.startsWith('parent') && refData[key] !== 0) // Keep only user keys and non-zero values
                                 .map(key => refData[key]);
                         refUsers.map(async(userId, index) => {
                             if(index === 0) {
