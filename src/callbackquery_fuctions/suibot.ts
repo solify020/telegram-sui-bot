@@ -12,6 +12,7 @@ import { BotStatusInterface, mainSuiClient } from '../services/constant';
 import * as ProfitUI from './profitbot';
 import { sendToken } from '../services/tokenUtils';
 import { Redis } from '@upstash/redis';
+import User from '../models/users.models';
 
 export const redis = new Redis({
     url: 'https://glorious-grouper-25901.upstash.io',
@@ -133,6 +134,13 @@ export async function mainUI(message: any, editable: boolean = true) {
 
 export async function refferalUI(message: any) {
     try {
+        const userInfo = await User.findOne({userId: message.chat.id});
+        let indirectUser = userInfo?.referredUser?.indirect;
+        let directUser = userInfo?.referredUser?.direct;
+        let rewardPaid = userInfo?.rewardPaid;
+        if (indirectUser === undefined) indirectUser = 0;
+        if (directUser === undefined) directUser = 0;
+        if (rewardPaid === undefined) rewardPaid = 0;
         const opts = {
             chat_id: message.chat.id,
             message_id: message.message_id,
@@ -156,8 +164,8 @@ Layer 2 - 3.5% reward
 Layer 3 - 1.5% reward
 Layer 4 - 0.5% reward
 
-Users Referred: 6 (direct: 3, indirect: 3)
-Reward Paid: 1.3 SUI
+Users Referred: ${indirectUser + directUser} (direct: ${directUser}, indirect: ${indirectUser})
+Reward Paid: ${rewardPaid} SUI
 
 <b>Your referral link:\n<code>${referralLink}</code>\n\n
 `;
