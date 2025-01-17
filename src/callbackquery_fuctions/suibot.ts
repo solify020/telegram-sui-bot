@@ -150,24 +150,20 @@ export async function refferalUI(message: any) {
             }
         };
         const referralLink = `https://t.me/${BOT_NAME}?start=${message.chat.id}`;
-        const newText = `
-                Referrals 💰 how it works?
+        const newText = `<b>Referrals 💰 how it works?</b>\n\nInvite friends to earn <b>10%</b> of all their payments while they enjoy a 10% discount forever! You also earn from your friends' referrals! Rewards are paid daily and sent directly to your Main wallet
+Layer 1 - 10% reward
+Layer 2 - 3.5% reward
+Layer 3 - 1.5% reward
+Layer 4 - 0.5% reward
 
-                Invite friends to earn 10% of all their payments while they enjoy a 10% discount forever! You also earn from your friends' referrals! Rewards are paid daily and sent directly to your Main wallet
+Users Referred: 6 (direct: 3, indirect: 3)
+Reward Paid: 1.3 SUI
 
-                Layer 1 - 10% reward
-                Layer 2 - 3.5% reward
-                Layer 3 - 1.5% reward
-                Layer 4 - 0.5% reward
-
-                Users Referred: 6 (direct: 3, indirect: 3)
-                Reward Paid: 1.3 SUI
-
-                Your referral link:\n<code>${referralLink}</code>\n\n
-            `;
+<b>Your referral link:\n<code>${referralLink}</code>\n\n
+`;
 
         if (message.entities && message.entities[0]?.type == 'bot_command') {
-            bot.sendPhoto(message.chat.id, 'https://ibb.co/Hrg1gn9', {
+            bot.sendPhoto(message.chat.id, 'https://ibb.co/Hrg1gn9/Referral-System.jpg', {
                 caption: newText,
                 parse_mode: 'HTML',
                 reply_markup: {

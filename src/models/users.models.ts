@@ -50,6 +50,20 @@ const UserSchema = new Schema({
         parent5: Number,
         isLink: Boolean
     },
+    referredUser: {
+        direct: {
+            type: Number,
+            default: 0
+        },
+        indirect: {
+            type: Number,
+            default: 0
+        }
+    },
+    rewardPaid: {
+        type: Number,
+        default: 0
+    },
     membershipHistory: [{
         level: Number,
         endTime: String,
