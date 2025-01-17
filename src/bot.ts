@@ -13,6 +13,7 @@ import { getBalance } from './services/wallets';
 import { processMembership } from './services/membership';
 import { BotStatusInterface, isValidSuiAddress, isValidSuiCoinType, isValidWithdrawAmount, isValidWithdrawTaskAmount, mainSuiClient } from './services/constant';
 import { sendSwapToken, sendToken } from './services/tokenUtils';
+import User from './models/users.models';
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 console.log('token = ', token);
@@ -30,11 +31,11 @@ export const botStatus = {
     tokenAddress: {},
     taskUpdate: {},
     referral: {},
-    otherStatus : {},
-    rentStatus : {},
-    rent1Status : {},
-    txStatus : {},
-    advancedStatus : {},
+    otherStatus: {},
+    rentStatus: {},
+    rent1Status: {},
+    txStatus: {},
+    advancedStatus: {},
 } as any;
 export const botData = {
     updatePercent: {},
@@ -43,24 +44,24 @@ export const botData = {
     tokenAddress: {},
     taskUpdateId: {},
     referral: {},
-    withDrawAmount : {},
-    withDrawAddress : {},
-    withDrawTaskAmount : {},
-    withDrawTaskAddress : {},
-    withDrawCoinType : {},
-    membershipLevel : {},
-    updateTaskId : {},
-    rentPercent : {},
-    rentBuyTransaction : {},
-    rentMinAmount : {},
-    rentMC : {},
-    rentTokenAddress : {},
-    rent1Percent : {},
-    rent1BuyTransaction : {},
-    rent1MinAmount : {},
-    rent1MC : {},
-    rent1TokenAddress : {},
-    progressRentingProjectIndex : {},
+    withDrawAmount: {},
+    withDrawAddress: {},
+    withDrawTaskAmount: {},
+    withDrawTaskAddress: {},
+    withDrawCoinType: {},
+    membershipLevel: {},
+    updateTaskId: {},
+    rentPercent: {},
+    rentBuyTransaction: {},
+    rentMinAmount: {},
+    rentMC: {},
+    rentTokenAddress: {},
+    rent1Percent: {},
+    rent1BuyTransaction: {},
+    rent1MinAmount: {},
+    rent1MC: {},
+    rent1TokenAddress: {},
+    progressRentingProjectIndex: {},
 } as any;
 
 const initializeState = (chatId: number) => {
@@ -76,11 +77,11 @@ export const tokenSwapManager = {} as any;
 export const processBot = () => {
     try {
         bot.setMyCommands([
-            {command : '/start', description : 'Home'},
-            {command : '/projects', description : 'My projects'},
-            {command : '/smart_profit', description : 'Smart Profit'},
-            {command : '/wallet', description : 'My wallet'},
-            {command : '/help', description : 'Help'}
+            { command: '/start', description: 'Home' },
+            { command: '/projects', description: 'My projects' },
+            { command: '/smart_profit', description: 'Smart Profit' },
+            { command: '/wallet', description: 'My wallet' },
+            { command: '/help', description: 'Help' }
         ])
 
         bot.onText(/\/start(.*)/, async (msg, match) => {
@@ -111,6 +112,26 @@ export const processBot = () => {
                 if (referrerId) {
                     const result = await updateRefferal(msg.chat.id, Number(referrerId));
                     if (result) {
+                        const user = await User.findOne({ userId: msg.chat.id });
+                        const refData:any = user?.referral;
+                        if (refData === undefined || refData === null) return;
+                        const refUsers = Object.keys(refData)
+                                .filter(key => key.startsWith('user') && refData[key] !== 0) // Keep only user keys and non-zero values
+                                .map(key => refData[key]);
+                        refUsers.map(async(userId, index) => {
+                            if(index === 0) {
+                                return await User.findOneAndUpdate({userId: userId}, {
+                                    referredUser: {
+                                        $inc: {direct: 1}
+                                    }
+                                })
+                            }
+                            return await User.findOneAndUpdate({userId: userId}, {
+                                referredUser: {
+                                    $inc: {direct: 1}
+                                }
+                            })
+                        })
                         bot.sendMessage(referrerId, `🎉 You referred a new user!`);
                     } else {
                         botStatus.referral[msg.chat.id] = true;
@@ -247,112 +268,112 @@ export const processBot = () => {
                 }
 
                 if (botStatus.otherStatus[chatId] == BotStatusInterface.InputWithdrawAddress) {
-                    if(!isValidSuiAddress(message.text)) { 
+                    if (!isValidSuiAddress(message.text)) {
                         ProfitUI.InputSimpleUI(message, 'Please input correct value', false);
-                        return ;
+                        return;
                     }
                     botData.withDrawAddress[chatId] = message.text;
                     botStatus.otherStatus[chatId] = undefined;
                     SuibotUI.confirmationMainUI(message);
                 } else if (botStatus.otherStatus[chatId] == BotStatusInterface.InputWithdrawAmount) {
-                    if(!(await isValidWithdrawAmount(message, message.text))) {
+                    if (!(await isValidWithdrawAmount(message, message.text))) {
                         ProfitUI.InputSimpleUI(message, "Please, enter a valid amount", false);
-                        return ;
+                        return;
                     }
                     botData.withDrawAmount[chatId] = message.text;
                     botStatus.otherStatus[chatId] = BotStatusInterface.InputWithdrawAddress;
                     SuibotUI.withdrawMainUI(message);
                 } else if (botStatus.otherStatus[chatId] == BotStatusInterface.InputContractAddress) {
-                    if(!(await isValidSuiCoinType(message))) {
+                    if (!(await isValidSuiCoinType(message))) {
                         ProfitUI.InputSimpleUI(message, "Please input correct coin type", false);
-                        return ;
+                        return;
                     }
                     botStatus.otherStatus[chatId] = undefined;
                     ProfitUI.createTaskConfirmationUI(message);
-                } else if(botStatus.otherStatus[chatId] == BotStatusInterface.UpdateSellPercent) {
+                } else if (botStatus.otherStatus[chatId] == BotStatusInterface.UpdateSellPercent) {
                     const value = parseInt(message.text);
-                    if(value <=0) {
+                    if (value <= 0) {
                         ProfitUI.InputSimpleUI(message, "Please input correct value", false);
-                        return ;
+                        return;
                     }
                     await updateTask(chatId, botData.updateTaskId[chatId], 'percent', value);
                     ProfitUI.profitTaskMainUI(message, botData.updateTaskId[chatId], false, botStatus.advancedStatus[message.chat.id]);
-                } else if(botStatus.otherStatus[chatId] == BotStatusInterface.UpdateMinAmount) {
+                } else if (botStatus.otherStatus[chatId] == BotStatusInterface.UpdateMinAmount) {
                     const value = parseFloat(message.text);
-                    if(value <=0) {
+                    if (value <= 0) {
                         ProfitUI.InputSimpleUI(message, "Please input correct value", false);
-                        return ;
+                        return;
                     }
                     await updateTask(chatId, botData.updateTaskId[chatId], 'minAmount', value);
                     ProfitUI.profitTaskMainUI(message, botData.updateTaskId[chatId], false, botStatus.advancedStatus[message.chat.id]);
-                } else if(botStatus.otherStatus[chatId] == BotStatusInterface.UpdateMarketCap) {
+                } else if (botStatus.otherStatus[chatId] == BotStatusInterface.UpdateMarketCap) {
                     const value = message.text;
-                    if(!value.endsWith('k') && !value.endsWith('K')) {
-                        ProfitUI.InputSimpleUI(message, "Please input correct value", false, );
-                        return ;
+                    if (!value.endsWith('k') && !value.endsWith('K')) {
+                        ProfitUI.InputSimpleUI(message, "Please input correct value", false,);
+                        return;
                     }
                     await updateTask(chatId, botData.updateTaskId[chatId], 'marketCap', value.toLowerCase());
                     ProfitUI.profitTaskMainUI(message, botData.updateTaskId[chatId], false, botStatus.advancedStatus[message.chat.id]);
-                } else if(botStatus.otherStatus[chatId] == BotStatusInterface.UpdateEveryBuy) {
+                } else if (botStatus.otherStatus[chatId] == BotStatusInterface.UpdateEveryBuy) {
                     const value = parseInt(message.text);
-                    if(value <= 0) {
+                    if (value <= 0) {
                         ProfitUI.InputSimpleUI(message, "Please input correct value", false);
-                        return ;
+                        return;
                     }
                     await updateTask(chatId, botData.updateTaskId[chatId], 'everyBuy', value);
                     ProfitUI.profitTaskMainUI(message, botData.updateTaskId[chatId], false, botStatus.advancedStatus[message.chat.id]);
                 } else if (botStatus.otherStatus[chatId] == BotStatusInterface.TaskWithDrawAmount) {
-                    if(!(await isValidWithdrawTaskAmount(message,botData.updateTaskId[message.chat.id] ,message.text))) {
+                    if (!(await isValidWithdrawTaskAmount(message, botData.updateTaskId[message.chat.id], message.text))) {
                         ProfitUI.InputSimpleUI(message, "Please, enter a valid amount", false);
-                        return ;
+                        return;
                     }
                     botData.withDrawTaskAmount[chatId] = message.text;
                     botStatus.otherStatus[chatId] = BotStatusInterface.TaskWithDrawAddress;
                     ProfitUI.taskWithdrawMainUI(message, false);
-                }  else if(botStatus.otherStatus[chatId] == BotStatusInterface.RentUpdateSellPercent) {
+                } else if (botStatus.otherStatus[chatId] == BotStatusInterface.RentUpdateSellPercent) {
                     const value = parseInt(message.text);
-                    if(value <=0) {
+                    if (value <= 0) {
                         ProfitUI.InputSimpleUI(message, "Please input correct value", false);
-                        return ;
+                        return;
                     }
-                    if(botData.progressRentingProjectIndex[chatId] == 0)
+                    if (botData.progressRentingProjectIndex[chatId] == 0)
                         botData.rentPercent[chatId] = value;
                     else botData.rent1Percent[chatId] = value;
                     ProfitUI.rentalMainUI(message, false, botData.progressRentingProjectIndex[chatId]);
-                } else if(botStatus.otherStatus[chatId] == BotStatusInterface.RentUpdateMinAmount) {
+                } else if (botStatus.otherStatus[chatId] == BotStatusInterface.RentUpdateMinAmount) {
                     const value = parseFloat(message.text);
-                    if(value <=0) {
+                    if (value <= 0) {
                         ProfitUI.InputSimpleUI(message, "Please input correct value", false);
-                        return ;
+                        return;
                     }
-                    if(botData.progressRentingProjectIndex[chatId] == 0)
+                    if (botData.progressRentingProjectIndex[chatId] == 0)
                         botData.rentMinAmount[chatId] = value;
                     else botData.rent1MinAmount[chatId] = value;
                     ProfitUI.rentalMainUI(message, false, botData.progressRentingProjectIndex[chatId]);
-                } else if(botStatus.otherStatus[chatId] == BotStatusInterface.RentUpdateMarketCap) {
+                } else if (botStatus.otherStatus[chatId] == BotStatusInterface.RentUpdateMarketCap) {
                     const value = message.text;
-                    if(!value.endsWith('k') && !value.endsWith('K')) {
+                    if (!value.endsWith('k') && !value.endsWith('K')) {
                         ProfitUI.InputSimpleUI(message, "Please input correct value", false);
-                        return ;
+                        return;
                     }
-                    if(botData.progressRentingProjectIndex[chatId] == 0)
+                    if (botData.progressRentingProjectIndex[chatId] == 0)
                         botData.rentMC[chatId] = value;
                     else botData.rent1MC[chatId] = value;
                     ProfitUI.rentalMainUI(message, false, botData.progressRentingProjectIndex[chatId]);
-                } else if(botStatus.otherStatus[chatId] == BotStatusInterface.RentUpdateEveryBuy) {
+                } else if (botStatus.otherStatus[chatId] == BotStatusInterface.RentUpdateEveryBuy) {
                     const value = parseInt(message.text);
-                    if(value <= 0) {
+                    if (value <= 0) {
                         ProfitUI.InputSimpleUI(message, "Please input correct value", false);
-                        return ;
+                        return;
                     }
-                    if(botData.progressRentingProjectIndex[chatId] == 0)
+                    if (botData.progressRentingProjectIndex[chatId] == 0)
                         botData.rentBuyTransaction[chatId] = value;
                     else botData.rent1BuyTransaction[chatId] = value;
                     ProfitUI.rentalMainUI(message, false, botData.progressRentingProjectIndex[chatId]);
-                } else if(botStatus.otherStatus[chatId] == BotStatusInterface.TaskWithDrawAddress) {
-                    if(!isValidSuiAddress(message.text)) { 
+                } else if (botStatus.otherStatus[chatId] == BotStatusInterface.TaskWithDrawAddress) {
+                    if (!isValidSuiAddress(message.text)) {
                         ProfitUI.InputSimpleUI(message, 'Please input correct address', false);
-                        return ;
+                        return;
                     }
                     botData.withDrawTaskAddress[chatId] = message.text;
                     botStatus.otherStatus[chatId] = undefined;
@@ -369,15 +390,15 @@ export const processBot = () => {
                 const data = callbackQuery.data;
                 const chatId = message.chat.id as number;
 
-                if(data?.startsWith('bot_task_')) {
-                    const taskId : string | undefined = data.split('_')[2];
-                    if(taskId == undefined) return;
+                if (data?.startsWith('bot_task_')) {
+                    const taskId: string | undefined = data.split('_')[2];
+                    if (taskId == undefined) return;
                     botStatus.advancedStatus[message.chat.id] = false;
                     botData.updateTaskId[message.chat.id] = taskId;
                     ProfitUI.profitTaskMainUI(message, taskId, false);
-                } else if(data?.startsWith('run_bot_')) {
-                    const taskId : string | undefined = data.split('_')[2];
-                    if(taskId == undefined) return ;
+                } else if (data?.startsWith('run_bot_')) {
+                    const taskId: string | undefined = data.split('_')[2];
+                    if (taskId == undefined) return;
 
                     if (!tokenSwapManager[taskId]) {
                         const swapManager = await createTokenSwapManager(chatId, taskId);
@@ -393,67 +414,67 @@ export const processBot = () => {
 
                     await updateTask(chatId, taskId, 'status', true);
                     await ProfitUI.profitTaskMainUI(message, taskId, true);
-                } else if(data?.startsWith('stop_bot_')) {
-                    const taskId : string | undefined = data.split('_')[2];
-                    if(taskId == undefined) return ;
+                } else if (data?.startsWith('stop_bot_')) {
+                    const taskId: string | undefined = data.split('_')[2];
+                    if (taskId == undefined) return;
                     if (tokenSwapManager[taskId]) {
                         await updateTask(chatId, taskId, 'status', false);
                         ProfitUI.profitTaskMainUI(message, taskId, true);
                         tokenSwapManager[taskId].stop();
                     }
-                } else if(data?.startsWith('advanced_menu_')) {
-                    const taskId : string | undefined = data.split('_')[2];
-                    if(taskId == undefined) return ;
+                } else if (data?.startsWith('advanced_menu_')) {
+                    const taskId: string | undefined = data.split('_')[2];
+                    if (taskId == undefined) return;
                     botStatus.advancedStatus[message.chat.id] = true;
                     await ProfitUI.profitTaskMainUI(message, taskId, true, true);
-                } else if(data?.startsWith('simple_menu_')) {
-                    const taskId : string | undefined = data.split('_')[2];
-                    if(taskId == undefined) return ;
+                } else if (data?.startsWith('simple_menu_')) {
+                    const taskId: string | undefined = data.split('_')[2];
+                    if (taskId == undefined) return;
                     botStatus.advancedStatus[message.chat.id] = false;
                     await ProfitUI.profitTaskMainUI(message, taskId, true, false);
-                } else if(data?.startsWith('upsellpercent_')) {
-                    const taskId : string | undefined = data.split('_')[1];
-                    if(taskId == undefined) return ;
+                } else if (data?.startsWith('upsellpercent_')) {
+                    const taskId: string | undefined = data.split('_')[1];
+                    if (taskId == undefined) return;
                     botData.updateTaskId[message.chat.id] = taskId;
                     botStatus.otherStatus[message.chat.id] = BotStatusInterface.UpdateSellPercent;
                     ProfitUI.InputSimpleUI(message, "Enter a sell % per transaction", false);
-                } else if(data?.startsWith('upminamount_')) {
-                    const taskId : string | undefined = data.split('_')[1];
-                    if(taskId == undefined) return ;
+                } else if (data?.startsWith('upminamount_')) {
+                    const taskId: string | undefined = data.split('_')[1];
+                    if (taskId == undefined) return;
                     botData.updateTaskId[message.chat.id] = taskId;
                     botStatus.otherStatus[message.chat.id] = BotStatusInterface.UpdateMinAmount;
                     ProfitUI.InputSimpleUI(message, "Enter a buy amount to trigger a sell", false);
-                } else if(data?.startsWith('upmarkcap_')) {
-                    const taskId : string | undefined = data.split('_')[1];
-                    if(taskId == undefined) return ;
+                } else if (data?.startsWith('upmarkcap_')) {
+                    const taskId: string | undefined = data.split('_')[1];
+                    if (taskId == undefined) return;
                     botData.updateTaskId[message.chat.id] = taskId;
                     botStatus.otherStatus[message.chat.id] = BotStatusInterface.UpdateMarketCap;
                     ProfitUI.InputSimpleUI(message, "Enter market cap to trigger sells. E.g 100k", false);
-                } else if(data?.startsWith('upeverybuy_')) {
-                    const taskId : string | undefined = data.split('_')[1];
-                    if(taskId == undefined) return ;
+                } else if (data?.startsWith('upeverybuy_')) {
+                    const taskId: string | undefined = data.split('_')[1];
+                    if (taskId == undefined) return;
                     botData.updateTaskId[message.chat.id] = taskId;
                     botStatus.otherStatus[message.chat.id] = BotStatusInterface.UpdateEveryBuy;
                     ProfitUI.InputSimpleUI(message, "Enter number of buys to trigger a sell or set a range (e.g, 1-10) for random sells", false);
-                } else if(data?.startsWith('extendRental_')) {
-                    const taskId : string | undefined = data.split('_')[1];
-                    if(taskId == undefined) return ;
+                } else if (data?.startsWith('extendRental_')) {
+                    const taskId: string | undefined = data.split('_')[1];
+                    if (taskId == undefined) return;
                     botData.updateTaskId[message.chat.id] = taskId;
                     botStatus.otherStatus[message.chat.id] = BotStatusInterface.ExtendRental;
                     SuibotUI.membershipUI(message);
-                } else if(data?.startsWith('task_withdraw_')) {
+                } else if (data?.startsWith('task_withdraw_')) {
                     botData.withDrawTaskAmount[message.chat.id] = undefined;
                     botData.withDrawTaskAddress[message.chat.id] = undefined;
                     // botData.withDrawCoinType[message.chat.id] = undefined;
-                    const taskId : string | undefined = data.split('_')[2];
-                    if(taskId == undefined) return ;
+                    const taskId: string | undefined = data.split('_')[2];
+                    if (taskId == undefined) return;
                     botData.updateTaskId[message.chat.id] = taskId;
                     botStatus.otherStatus[message.chat.id] = BotStatusInterface.TaskWithDrawAddress;
                     ProfitUI.withDrawSelectCoinUI(message, false);
                     // ProfitUI.taskWithdrawMainUI(message, false);
-                } else if(data?.startsWith('task_delete_')) {
-                    const taskId : string | undefined = data.split('_')[2];
-                    if(taskId == undefined) return ;
+                } else if (data?.startsWith('task_delete_')) {
+                    const taskId: string | undefined = data.split('_')[2];
+                    if (taskId == undefined) return;
                     botData.updateTaskId[message.chat.id] = undefined;
                     botStatus.otherStatus[message.chat.id] = undefined;
                     await deleteTasks(chatId, taskId);
@@ -462,24 +483,24 @@ export const processBot = () => {
                 }
 
                 switch (data) {
-                    case 'mainboard_refresh' :
+                    case 'mainboard_refresh':
                         await SuibotUI.mainUI(message, true);
                         break;
-                    case 'task_refresh' :
+                    case 'task_refresh':
                         ProfitUI.profitTaskMainUI(message, botData.updateTaskId[chatId], true, botStatus.advancedStatus[message.chat.id]);
                         break;
-                    case 'withdraw_token' :
+                    case 'withdraw_token':
                         botData.withDrawCoinType = 1;
                         ProfitUI.taskWithdrawMainUI(message, true);
                         break;
-                    case 'withdraw_sui' :
+                    case 'withdraw_sui':
                         botData.withDrawCoinType = 0;
                         ProfitUI.taskWithdrawMainUI(message, true);
                         break;
                     case 'profit_bot':
                         ProfitUI.profitMainUI(message);
                         break;
-                    
+
                     case 'back_smartprofit':
                         ProfitUI.profitMainUI(message);
                         break;
@@ -495,39 +516,39 @@ export const processBot = () => {
                     case 'buy_bot':
                         SuibotUI.membershipUI(message);
                         break;
-                    case 'help' :
+                    case 'help':
                         SuibotUI.helpUI(message);
                         break;
-                    case 'withdraw' :
+                    case 'withdraw':
                         botData.withDrawAmount[message.chat.id] = undefined;
                         botData.withDrawAddress[message.chat.id] = undefined;
                         SuibotUI.withdrawMainUI(message);
                         break;
-                    case 'withdraw_mainwallet' :
+                    case 'withdraw_mainwallet':
                         botData.withDrawTaskAddress[message.chat.id] = undefined;
                         ProfitUI.taskWithdrawConfirmUI(message, false);
                         break;
-                    case 'edit_amount' :
+                    case 'edit_amount':
                         botStatus.otherStatus[chatId] = BotStatusInterface.InputWithdrawAmount;
                         ProfitUI.InputSimpleUI(message, "Please input the amount to withdraw", false);
                         break;
-                    case 'edit_taskamount' :
+                    case 'edit_taskamount':
                         botStatus.otherStatus[chatId] = BotStatusInterface.TaskWithDrawAmount;
                         ProfitUI.InputSimpleUI(message, "Please input the amount to withdraw", false);
                         break;
-                    case 'confirm_withdraw' :
+                    case 'confirm_withdraw':
                         await SuibotUI.confirmingUI(message);
                         botStatus.otherStatus[chatId] = undefined;
                         break;
-                    case 'taskwithdraw_confirm' :
+                    case 'taskwithdraw_confirm':
                         await ProfitUI.taskWithDrawConfirmingUI(message);
                         botStatus.otherStatus[chatId] = undefined;
                         botData.withDrawAddress[chatId] = undefined;
                         botData.withDrawAmount[chatId] = undefined;
                         // botData.withDrawCoinType[chatId] = undefined;
                         break;
-                    case 'newtask_confirm' :
-                        if(botStatus.rentStatus[chatId] == false || botStatus.rentStatus[chatId] == undefined) {
+                    case 'newtask_confirm':
+                        if (botStatus.rentStatus[chatId] == false || botStatus.rentStatus[chatId] == undefined) {
                             botStatus.rentStatus[chatId] = true;
                             botData.rentPercent[chatId] = 30;
                             botData.rentMinAmount[chatId] = 0.1;
@@ -563,7 +584,7 @@ export const processBot = () => {
                             await ProfitUI.rentalMainUI(message, false, 1);
                         }
                         break;
-                    case 'newtask_rent' :
+                    case 'newtask_rent':
                         botStatus.otherStatus[message.chat.id] = undefined;
                         await SuibotUI.membershipUI(message);
                         break;
@@ -572,31 +593,31 @@ export const processBot = () => {
                         await SuibotUI.membershipPaidCheckingUI(message, false);
                         break;
 
-                    case 'close' :
+                    case 'close':
                         await bot.deleteMessage(chatId, message.message_id);
                         break;
 
-                    case 'rent_update_sell_percent' :
+                    case 'rent_update_sell_percent':
                         botStatus.otherStatus[message.chat.id] = BotStatusInterface.RentUpdateSellPercent;
                         ProfitUI.InputSimpleUI(message, "Enter a sell % per transaction", false);
                         break;
-                    case 'rent_update_every_transaction' :
+                    case 'rent_update_every_transaction':
                         botStatus.otherStatus[message.chat.id] = BotStatusInterface.RentUpdateEveryBuy;
                         ProfitUI.InputSimpleUI(message, "Enter number of buys to trigger a sell or set a range (e.g, 1-10) for random sells", false);
                         break;
-                    case 'rent_update_min_amount' :
+                    case 'rent_update_min_amount':
                         botStatus.otherStatus[message.chat.id] = BotStatusInterface.RentUpdateMinAmount;
                         ProfitUI.InputSimpleUI(message, "Enter a buy amount to trigger a sell", false);
                         break;
-                    case 'rent_update_marketcap' :
+                    case 'rent_update_marketcap':
                         botStatus.otherStatus[message.chat.id] = BotStatusInterface.RentUpdateMarketCap;
                         ProfitUI.InputSimpleUI(message, "Enter market cap to trigger sells. E.g 100k", false);
                         break;
-                    case 'rent_task' :
+                    case 'rent_task':
                         botData.progressRentingProjectIndex[message.chat.id] = 0;
                         ProfitUI.rentalMainUI(message, false);
                         break;
-                    case 'rent_task_1' :
+                    case 'rent_task_1':
                         botData.progressRentingProjectIndex[message.chat.id] = 1;
                         ProfitUI.rentalMainUI(message, false, 1);
                         break;
@@ -610,7 +631,7 @@ export const processBot = () => {
                     case 'membership-3':
                         SuibotUI.membershipPaymentUI(message, Number(3));
                         break;
-                    case 'not_run' :
+                    case 'not_run':
                         ProfitUI.InputSimpleUI(message, "Your subscription is expired", false);
                         break;
 
@@ -764,14 +785,14 @@ export const processBot = () => {
                         ProfitUI.profitMainUI(message);
                         break;
                     case 'delete_rent':
-                        if(botData.progressRentingProjectIndex[chatId] == 0) {
+                        if (botData.progressRentingProjectIndex[chatId] == 0) {
                             botStatus.rentStatus[chatId] = false;
                             botData.rentPercent[chatId] = undefined;
                             botData.rentMinAmount[chatId] = undefined;
                             botData.rentMC[chatId] = undefined;
                             botData.rentBuyTransaction[chatId] = undefined;
                             botData.rentTokenAddress[chatId] = undefined;
-                        } else if(botData.progressRentingProjectIndex[chatId] == 1) {
+                        } else if (botData.progressRentingProjectIndex[chatId] == 1) {
                             botStatus.rent1Status[chatId] = false;
                             botData.rent1Percent[chatId] = undefined;
                             botData.rent1MinAmount[chatId] = undefined;

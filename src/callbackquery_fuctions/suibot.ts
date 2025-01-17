@@ -115,7 +115,7 @@ export async function mainUI(message: any, editable: boolean = true) {
             `<code>${userInfo?.wallet?.address}</code>\n\n` + `Balance : ${displayBalance} SUI\n\n—————\n\n` +
             "🔮 SMART PROFIT — The smartest way to sell your tokens and maximize the profits without nuking your chart. Pay a fixed amount per token for rental.\n\n";
         // "💧SMART VOLUME — Bring volume to your project, increase holders count and rank higher on DEX the smart way. Pay a fixed amount per token for rental.";
-        // `Balance: ${balance} <b>SUI</b>\n`;
+        // `Balance: ${balance} <strong>SUI</strong>\n`;
         // `Click on the Refresh button to update your current balance.\n\n`;
         // `Join our Telegram group @SmartSui and follow us on Twitter!`;
 
@@ -158,7 +158,7 @@ export async function refferalUI(message: any) {
             }
         };
         const referralLink = `https://t.me/${BOT_NAME}?start=${message.chat.id}`;
-        const newText = `<b>Referrals 💰 how it works?</b>\n\nInvite friends to earn <b>10%</b> of all their payments while they enjoy a 10% discount forever! You also earn from your friends' referrals! Rewards are paid daily and sent directly to your Main wallet
+        const newText = `<strong>Referrals 💰 how it works?</strong>\n\nInvite friends to earn <strong>10%</strong> of all their payments while they enjoy a 10% discount forever! You also earn from your friends' referrals! Rewards are paid daily and sent directly to your Main wallet
 Layer 1 - 10% reward
 Layer 2 - 3.5% reward
 Layer 3 - 1.5% reward
@@ -167,11 +167,11 @@ Layer 4 - 0.5% reward
 Users Referred: ${indirectUser + directUser} (direct: ${directUser}, indirect: ${indirectUser})
 Reward Paid: ${rewardPaid} SUI
 
-<b>Your referral link:\n<code>${referralLink}</code>\n\n
+<strong>Your referral link:</strong>\n<code>${referralLink}</code>\n\n
 `;
 
         if (message.entities && message.entities[0]?.type == 'bot_command') {
-            bot.sendPhoto(message.chat.id, 'https://ibb.co/Hrg1gn9/Referral-System.jpg', {
+            bot.sendPhoto(message.chat.id, 'https://ibb.co/drkKsx8', {
                 caption: newText,
                 parse_mode: 'HTML',
                 reply_markup: {
@@ -332,7 +332,7 @@ export async function membershipUI(message: any) {
         // let text = 'Please choose your plan.\n\n';
 
         // if (currentMembership && membership) {
-        //     text = `Your current membership: <b>${membership.name} plan</b>\n` + 
+        //     text = `Your current membership: <strong>${membership.name} plan</strong>\n` + 
         //     `Time: <i>${formatDateString(currentMembership?.endTime as string)}</i> (UTC)`;
         // }
 

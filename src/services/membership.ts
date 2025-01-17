@@ -3,7 +3,6 @@ import { DISCOUNT_RATE, FEE_RATE_MAX, FEE_RATES, MEMBERSHIP_1, MEMBERSHIP_2, MEM
 import { sendMultiToken, sendToken } from "./tokenUtils";
 import { addMembershipHistory, getUserInfo } from "./users";
 import { getBalance } from "./wallets";
-import User from "../models/users.models";
 
 import 'dotenv/config';
 import * as process from 'process';
@@ -56,25 +55,11 @@ export const processMembership = async (userId: number, level: number) => {
                     const user_1 = await getUserInfo(userIndex);
 
                     if (index === 0 && (!userInfo.membershipHistory || userInfo.membershipHistory) && userInfo.membershipHistory.length === 0) {
-                        await User.findOneAndUpdate({ userId: referral }, {
-                            referredUser: {
-                                ...userInfo.referredUser,
-                                $inc: { direct: 1 }
-                            },
-                            $inc: {rewardPaid: BigInt(payAmount * FEE_RATE_MAX / 100)}
-                        })
                         return {
                             receiver: user_1.wallet?.address,
                             amount: BigInt(payAmount * FEE_RATE_MAX / 100)
                         }
                     } else {
-                        await User.findOneAndUpdate({ userId: referral }, {
-                            referredUser: {
-                                ...userInfo.referredUser,
-                                $inc: { indirect: 1 }
-                            },
-                            $inc: {rewardPaid: BigInt(payAmount * FEE_RATE_MAX / 100)}
-                        })
                         return {
                             receiver: user_1.wallet?.address,
                             amount: BigInt(payAmount * FEE_RATES[index] / 100)

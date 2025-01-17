@@ -6,7 +6,6 @@
         "run": "node ./dist/main.js",
         "dev": "nodemon --exec ts-node ./src/main.ts"
     },
-    "type": "module",
     "dependencies": {
         "@7kprotocol/sdk-ts": "^2.1.7",
         "@cetusprotocol/cetus-sui-clmm-sdk": "^5.1.10",
